@@ -133,14 +133,38 @@ window._lastSummary = 'Missed Call Revenue Loss Summary\n' +
 }
 
 document.getElementById('calcBtn').addEventListener('click', calc);
+
 document.getElementById('copyBtn').addEventListener('click', function() {
-if (window._lastSummary) {
-navigator.clipboard.writeText(window._lastSummary).then(function() {
+if (!window._lastSummary) return;
 var btn = document.getElementById('copyBtn');
 var old = btn.textContent;
+function showCopied() {
 btn.textContent = 'Copied!';
 setTimeout(function() { btn.textContent = old; }, 1500);
+}
+function fallbackCopy(text) {
+var ta = document.createElement('textarea');
+ta.value = text;
+ta.style.position = 'fixed';
+ta.style.opacity = '0';
+document.body.appendChild(ta);
+ta.focus();
+ta.select();
+try {
+document.execCommand('copy');
+showCopied();
+} catch (err) {
+btn.textContent = 'Copy failed - select manually';
+setTimeout(function() { btn.textContent = old; }, 2000);
+}
+document.body.removeChild(ta);
+}
+if (navigator.clipboard && navigator.clipboard.writeText) {
+navigator.clipboard.writeText(window._lastSummary).then(showCopied).catch(function() {
+fallbackCopy(window._lastSummary);
 });
+} else {
+fallbackCopy(window._lastSummary);
 }
 });
 </script>
