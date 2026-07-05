@@ -4,6 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Missed Call Revenue Loss Calculator</title>
+<meta name="description" content="Free calculator that estimates how much monthly and annual revenue a service business loses from missed phone calls, plus the payback period on fixing it. No signup required.">
+<meta property="og:title" content="Missed Call Revenue Loss Calculator">
+<meta property="og:description" content="See how much revenue your service business loses every month from missed calls, and the payback period on fixing it. Free, no signup, no email gate.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://franklychris514.github.io/missed-call-revenue-calculator/">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Missed Call Revenue Loss Calculator">
+<meta name="twitter:description" content="Free calculator: estimate lost revenue from missed calls and the payback period on fixing it.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%93%9E%3C/text%3E%3C/svg%3E">
 <style>
 body { font-family: -apple-system, Segoe UI, Roboto, Arial, sans-serif; background: #f5f6fa; margin: 0; padding: 40px 16px; color: #1d1d1f; }
 .wrap { max-width: 720px; margin: 0 auto; }
@@ -12,6 +21,7 @@ p.sub { color: #555; margin-top: 0; }
 .card { background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 20px; }
 label { display: block; font-weight: 600; margin: 14px 0 6px; font-size: 14px; }
 input, select { width: 100%; padding: 10px 12px; font-size: 15px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }
+input:focus, select:focus, button:focus { outline: 3px solid #2f6feb; outline-offset: 2px; }
 button { margin-top: 20px; background: #2f6feb; color: #fff; border: none; padding: 12px 20px; border-radius: 8px; font-size: 16px; cursor: pointer; font-weight: 600; }
 button:hover { background: #2557c7; }
 .results { display: none; }
@@ -23,6 +33,7 @@ button:hover { background: #2557c7; }
 .copy-btn { background: #eee; color: #333; margin-top: 12px; }
 .copy-btn:hover { background: #ddd; }
 footer { text-align: center; color: #999; font-size: 13px; margin-top: 30px; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; }
 </style>
 </head>
 <body>
@@ -31,8 +42,9 @@ footer { text-align: center; color: #999; font-size: 13px; margin-top: 30px; }
 <p class="sub">Estimate how much revenue your business is losing every month from missed phone calls, plus the payback period on fixing it.</p>
 
 <div class="card">
+<form id="calcForm">
 <label for="industry">Industry preset</label>
-<select id="industry">
+<select id="industry" name="industry">
 <option value="custom">Custom / other</option>
 <option value="home">Home services (HVAC, plumbing, electrical)</option>
 <option value="legal">Legal / law firm</option>
@@ -43,24 +55,25 @@ footer { text-align: center; color: #999; font-size: 13px; margin-top: 30px; }
 </select>
 
 <label for="missedCalls">Missed calls per week</label>
-<input type="number" id="missedCalls" value="15" min="0">
+<input type="number" id="missedCalls" name="missedCalls" value="15" min="0" inputmode="decimal">
 
 <label for="avgValue">Average value per booked customer/job ($)</label>
-<input type="number" id="avgValue" value="250" min="0">
+<input type="number" id="avgValue" name="avgValue" value="250" min="0" inputmode="decimal">
 
 <label for="closeRate">Close rate on answered calls (%)</label>
-<input type="number" id="closeRate" value="30" min="0" max="100">
+<input type="number" id="closeRate" name="closeRate" value="30" min="0" max="100" inputmode="decimal">
 
 <label for="solutionCost">Monthly cost of a missed-call solution ($) - optional, for ROI</label>
-<input type="number" id="solutionCost" value="200" min="0">
+<input type="number" id="solutionCost" name="solutionCost" value="200" min="0" inputmode="decimal">
 
 <label for="recoveryRate">% of missed calls the solution would recover</label>
-<input type="number" id="recoveryRate" value="80" min="0" max="100">
+<input type="number" id="recoveryRate" name="recoveryRate" value="80" min="0" max="100" inputmode="decimal">
 
-<button id="calcBtn">Calculate revenue lost</button>
+<button type="submit" id="calcBtn">Calculate revenue lost</button>
+</form>
 </div>
 
-<div class="card results" id="results">
+<div class="card results" id="results" role="region" aria-live="polite" aria-label="Calculation results">
 <div class="result-row"><span class="label">Monthly missed calls</span><span class="value" id="rMonthlyCalls"></span></div>
 <div class="result-row"><span class="label">Lost bookings per month</span><span class="value" id="rLostBookings"></span></div>
 <div class="result-row"><span class="label">Monthly revenue lost</span><span class="value big" id="rMonthlyLoss"></span></div>
@@ -68,7 +81,8 @@ footer { text-align: center; color: #999; font-size: 13px; margin-top: 30px; }
 <div class="result-row"><span class="label">Monthly revenue recoverable</span><span class="value" id="rRecoverable"></span></div>
 <div class="result-row"><span class="label">Payback period on solution</span><span class="value" id="rPayback"></span></div>
 <div class="result-row"><span class="label">Monthly ROI</span><span class="value" id="rRoi"></span></div>
-<button class="copy-btn" id="copyBtn">Copy summary to clipboard</button>
+<button class="copy-btn" id="copyBtn" type="button">Copy summary to clipboard</button>
+<span class="visually-hidden" id="copyStatus" role="status" aria-live="polite"></span>
 </div>
 
 <footer>Built as a free lead-generation tool. Not affiliated with any specific vendor.</footer>
@@ -132,14 +146,19 @@ window._lastSummary = 'Missed Call Revenue Loss Summary\n' +
 'Monthly ROI: ' + (roi !== null ? roi.toFixed(0) + '%' : 'n/a');
 }
 
-document.getElementById('calcBtn').addEventListener('click', calc);
+document.getElementById('calcForm').addEventListener('submit', function(e) {
+e.preventDefault();
+calc();
+});
 
 document.getElementById('copyBtn').addEventListener('click', function() {
 if (!window._lastSummary) return;
 var btn = document.getElementById('copyBtn');
+var status = document.getElementById('copyStatus');
 var old = btn.textContent;
 function showCopied() {
 btn.textContent = 'Copied!';
+status.textContent = 'Summary copied to clipboard';
 setTimeout(function() { btn.textContent = old; }, 1500);
 }
 function fallbackCopy(text) {
